@@ -74,3 +74,115 @@ int recursiveSum(int n){
 
 기저 사례를 선택할 떄는 존재하는 모든 입력이 항상 기저 사례의 답을 아용해 계산될 수 있도록 신경써야 한다.
 재귀 호출은 기존에 반복문을 사용해 작성하던 코드를 다르게 짤 수 있는 방법을 제공해 준다. 이 함수에서는 기존의 코드에 비해 재귀 호출을 통해 얻을 수 있는 별다른 이득이 없었지만, 문제의 특성에 따라 재귀 호출은 코딩을 훨씬 간편하게 해 줄 수 있는 강력한 무기가 된다.
+
+- 예제 : 중첩 반복문 대체하기
+
+  0 부터 차례대로 번호 매겨진 n 개의 원소 중 네개를 고르는 모든 경우를 출력하는 코드를 작성해 보자.
+
+  ```c++
+  for(int i=0; i<n; i++)
+    for(int j= i+1; j < n; ++j )
+      for(int k=j+1; k<n; ++k)
+        for(int l = k+1; l<n; ++l)
+          cout << i << " " << j << " " << k << " " << l << endl;
+  ```
+
+만약 다섯 개를 골라야할 경우는 5 중 for 문을 쓰면 된다. 재귀 호출은 이런 경우에 단순한 반복문보다 간결하고 유연한 코드를 작성할 수 있도록 해준다.
+
+위 코드 조각이 하는 작업은 네 개의 조가긍로 나눌 수 있다. 각 조각에서 하나의 원소를 고르는 것이다. 이렇게 원소를 고른 뒤, 남은 원소들을 고르는 작업을 자기 자신을 호출해 떠넘기는 재귀 함수를 작성한다. 이때 남은 원소들을 고르는 '작업'을 이볅들의 집합으로 정의할 수 있다.
+
+```c++
+// n : 전체 원소의 수
+// picked : 지금까지 고른 원소들의 번호
+// toPick : 더 고를 원소의 수
+// 일 때, 앞으로 toPick개의 원소를 고르는 모든 방법을 출력한다.
+
+void pick(int n, vector<int>& picked, int toPick){
+  // 기저사례 : 더 고를 원소가 없을 때 고른 원소들을 출력한다.
+  if(toPick ==0) {printPicked(picked); return ;}
+  // 고를 수 있는 가장 작은 번호를 계산한다.
+  int smallest = picked.empty() ? 0 : picked.back() + 1;
+  // 이 단계에서 원소 하나를 고른다.
+  for(int next = smallest; next < n; ++next){
+    picked.push_back(next);
+    pick(n, picked, toPick - 1);
+    picked.pop_back();
+  }
+}
+```
+
+```js
+let picked = [];
+function pick(n, m) {
+  let toPick = m;
+  if (toPick == 0) {
+    console.log(picked);
+    return picked;
+  }
+  let smallest = picked.length == 0 ? 0 : picked[picked.length - 1] + 1;
+  for (let next = smallest; next < n; ++next) {
+    picked.push(next);
+    pick(n, toPick - 1);
+    picked.pop();
+  }
+}
+pick(7, 4);
+```
+
+이 코드는 텅 빈 답에서 시작해서 매 단계마다 하나의 원소를 추가하는 일을 반복하다가, 하나의 답을 만든 뒤에는 이전으로 돌아가 다른 원소를 추가하는 식으로 모든 답을 생성한다.
+중첩 for 문과 달리 우리가 n 개의 원소 중에서 몇개를 고르든지 사용할 수 있다는 장점이 있다.
+
+`재귀호출은 완전탐색을 구현할 떄 아주 유용한 도구이다.`
+
+- 예제 : 보글 게임
+  이 게임의 목적은 상하좌우 / 대각선으로 인접한 칸들의 글자들을 이어서 단어를 찾아내는 것이다.
+
+hasWord(y, x, word)=보글 게임판의 (y,x)에서 시작하는 단어 word 의 존재 여부를 반환한다.
+
+이 문제를 풀 때 가장 까다로운 점은 다음 글자가 될 수 있는 칸이 여러개 있을 떄 이 중 어느 글자를 선택해야 할지 미리 알 수 없다는 점이다.
+
+가장 간단한 방법은 완전탐색을 이용해, 단어를 찾아낼 때까지 모든 인접한 칸을 하나씩 시도해 보는 것이다.
+그중 한칸에서도 단어를 찾을 수 없으면 성공이고 어느 칸을 선택하더라도 답이 없다면 실패가 된다.
+
+### 문제의 분할
+
+hasWord()가 하는 일을 가장 자연스럽게 조각내는 방법은 각 글자를 하나의 조각으로 만드는 것이다. 함수 호출시에 단어의 시작 위치를 정해주기 때문에, 문제의 조각들 중 첫 번째 글자에 해당하는 조각을 간단하게 해결할 수 있다.
+
+### 기저 사례의 선택
+
+더 이상의 탐색 없이 간단히 답을 낼 수 있는 다음 경우들을 기저 사례로 선택한다.
+
+1. 위치 (y,x)에 있는 글자가 원하는 단어의 첫 글자가 아닌 경우 항상 실패
+2. (1 번 경우에 해당되지 않을 경우)원하는 단어가 한글자인 경우 항상 성공
+
+두 조건은 순서가 바뀌면 안된다.
+
+> 이런 기저 사례를 정확하게 파악해야할 필요가 있다.
+
+간결한 코드를 작성하는 유용한 팁이 있다면, 입력이 잘못된거나 범위에서 벗어난 경우도 기저 사례로 택해서 맨 처음에 처리하는 것이다.
+
+```js
+const board = [
+  ["U", "R", "L", "P", "M"],
+  ["X", "P", "R", "E", "T"],
+  ["G", "I", "A", "E", "T"],
+  ["X", "T", "N", "Z", "Y"],
+  ["X", "O", "Q", "R", "S"]
+];
+
+const dx = [-1, -1, -1, 1, 1, 1, 0, 0];
+const dy = [-1, 0, 1, -1, 0, 1, -1, 1];
+
+function hasWord(y, x, word) {
+  if (x > 4 || y > 4 || x < 0 || y < 0) return false;
+  if (board[y][x] != word[0]) return false;
+  if (word.length == 1) return true;
+  for (let direction = 0; direction < 8; ++direction) {
+    let nextY = y + dy[direction],
+      nextX = x + dx[direction];
+    if (hasWord(nextY, nextX, word.substring(1))) return true;
+  }
+  return false;
+}
+hasWord(1, 1, "PRETTY");
+```
